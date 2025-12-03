@@ -69,3 +69,36 @@ void Board::print() const {
     }
     std::cout << std::string((cellWidth + 1) * width_ + 1, '-') << "\n";
 }
+
+std::vector<Move> Board::getValidMoves(int row, int col, bool onlyUnvisited) const {
+    std::vector<Move> validMoves;
+    validMoves.reserve(8);  // Maximum possible knight moves
+
+    for (const auto& move : KNIGHT_MOVES) {
+        int newRow = row + move.row;
+        int newCol = col + move.col;
+
+        if (isValid(newRow, newCol)) {
+            if (!onlyUnvisited || !isVisited(newRow, newCol)) {
+                validMoves.push_back({newRow, newCol});
+            }
+        }
+    }
+
+    return validMoves;
+}
+
+int Board::countValidMoves(int row, int col) const {
+    int count = 0;
+
+    for (const auto& move : KNIGHT_MOVES) {
+        int newRow = row + move.row;
+        int newCol = col + move.col;
+
+        if (isValid(newRow, newCol) && !isVisited(newRow, newCol)) {
+            ++count;
+        }
+    }
+
+    return count;
+}

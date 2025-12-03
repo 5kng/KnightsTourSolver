@@ -5,6 +5,14 @@
 #include <stdexcept>
 
 /**
+ * @brief Represents a position on the board
+ */
+struct Move {
+    int row;
+    int col;
+};
+
+/**
  * @brief Represents a chessboard for the Knight's Tour problem
  *
  * The board uses a 1D vector for efficient memory layout and cache performance.
@@ -82,7 +90,31 @@ public:
      */
     void print() const;
 
+    /**
+     * @brief Get all valid knight moves from a position
+     * @param row Current row
+     * @param col Current column
+     * @param onlyUnvisited If true, only return unvisited squares
+     * @return Vector of valid moves
+     */
+    [[nodiscard]] std::vector<Move> getValidMoves(int row, int col, bool onlyUnvisited = true) const;
+
+    /**
+     * @brief Count number of valid knight moves from a position
+     * @param row Current row
+     * @param col Current column
+     * @return Number of valid unvisited moves (degree in graph theory)
+     */
+    [[nodiscard]] int countValidMoves(int row, int col) const;
+
 private:
+    // Knight move offsets (L-shaped: 2 squares in one direction, 1 in perpendicular)
+    static constexpr Move KNIGHT_MOVES[8] = {
+        {-2, -1}, {-2, +1},  // Up-left, up-right
+        {-1, -2}, {-1, +2},  // Left-up, right-up
+        {+1, -2}, {+1, +2},  // Left-down, right-down
+        {+2, -1}, {+2, +1}   // Down-left, down-right
+    };
     size_t width_;
     size_t height_;
     std::vector<int> board_;
