@@ -29,9 +29,42 @@ The solver uses Warnsdorff's heuristic, a greedy algorithm that chooses the next
 
 🚧 **Under Development** - Following the 7-day build plan
 
+## Requirements
+
+- C++20 compatible compiler (GCC 10+, Clang 10+, or MSVC 2019+)
+- CMake 3.15 or higher
+
 ## Building
 
-Instructions coming soon.
+### Linux / macOS
+
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+./knights_tour
+```
+
+### Windows (Visual Studio)
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+.\Release\knights_tour.exe
+```
+
+### Build Types
+
+- **Release** (default): Optimized for performance (-O3, LTO enabled)
+- **Debug**: Includes debugging symbols and address sanitizer
+
+To build in debug mode:
+```bash
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+```
 
 ## Usage
 
