@@ -29,6 +29,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 set(SOURCES
     src/main.cpp
     src/Board.cpp
+    src/Solver.cpp
 )
 
 # Create executable

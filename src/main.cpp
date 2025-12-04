@@ -1,93 +1,83 @@
 #include <iostream>
+#include <chrono>
 #include "Board.h"
+#include "Solver.h"
 
 int main() {
-    std::cout << "Knight's Tour Solver - Move Validation Test\n\n";
+    std::cout << "Knight's Tour Solver - Backtracking Algorithm Test\n\n";
 
     try {
-        // Create an 8x8 board
-        Board board(8, 8);
+        // Test on a small 5x5 board first
+        std::cout << "=== Testing on 5x5 Board ===\n\n";
+        Board board5(5, 5);
+        Solver solver5(board5);
 
-        std::cout << "Board created: " << board.width() << "x" << board.height() << "\n";
-        std::cout << "Total squares: " << board.size() << "\n\n";
+        std::cout << "Attempting to solve 5x5 board starting at (0,0)...\n";
 
-        // Test knight moves from different positions
-        std::cout << "=== Testing Knight Move Validation ===\n\n";
+        auto start = std::chrono::high_resolution_clock::now();
+        bool solved5 = solver5.solve(0, 0, TourType::OPEN);
+        auto end = std::chrono::high_resolution_clock::now();
 
-        // Corner position (0,0) - limited moves
-        std::cout << "From corner (0,0):\n";
-        auto moves = board.getValidMoves(0, 0);
-        std::cout << "  Valid moves: " << moves.size() << "\n";
-        std::cout << "  Move count: " << board.countValidMoves(0, 0) << "\n";
-        std::cout << "  Positions: ";
-        for (const auto& move : moves) {
-            std::cout << "(" << move.row << "," << move.col << ") ";
-        }
-        std::cout << "\n\n";
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-        // Center position (4,4) - maximum moves
-        std::cout << "From center (4,4):\n";
-        moves = board.getValidMoves(4, 4);
-        std::cout << "  Valid moves: " << moves.size() << "\n";
-        std::cout << "  Move count: " << board.countValidMoves(4, 4) << "\n";
-        std::cout << "  Positions: ";
-        for (const auto& move : moves) {
-            std::cout << "(" << move.row << "," << move.col << ") ";
-        }
-        std::cout << "\n\n";
+        if (solved5) {
+            std::cout << "✓ Solution found!\n";
+            std::cout << "  Time: " << duration.count() << " ms\n";
+            std::cout << "  Backtracks: " << solver5.getBacktrackCount() << "\n";
+            std::cout << "  Moves: " << solver5.getPath().size() << "\n\n";
 
-        // Edge position (0,4)
-        std::cout << "From edge (0,4):\n";
-        moves = board.getValidMoves(0, 4);
-        std::cout << "  Valid moves: " << moves.size() << "\n";
-        std::cout << "  Move count: " << board.countValidMoves(0, 4) << "\n\n";
-
-        // Test with visited squares
-        std::cout << "=== Testing with Visited Squares ===\n\n";
-        board.set(0, 0, 1);
-        board.set(1, 2, 2);
-        board.set(2, 1, 3);
-
-        std::cout << "Marked (0,0), (1,2), and (2,1) as visited\n\n";
-
-        std::cout << "From (0,0) - checking only unvisited:\n";
-        moves = board.getValidMoves(0, 0, true);
-        std::cout << "  Unvisited moves: " << moves.size() << "\n";
-        std::cout << "  Move count: " << board.countValidMoves(0, 0) << "\n\n";
-
-        std::cout << "From (0,0) - checking all moves:\n";
-        moves = board.getValidMoves(0, 0, false);
-        std::cout << "  All moves: " << moves.size() << "\n\n";
-
-        // Test move degree distribution
-        std::cout << "=== Move Degree Distribution (empty board) ===\n\n";
-        board.clear();
-
-        int corners = 0, edges = 0, center = 0;
-        for (int row = 0; row < 8; ++row) {
-            for (int col = 0; col < 8; ++col) {
-                int degree = board.countValidMoves(row, col);
-                if (degree == 2) corners++;
-                else if (degree <= 4) edges++;
-                else center++;
+            // Display the solution
+            std::cout << "Solution path (first 10 moves):\n";
+            const auto& path = solver5.getPath();
+            for (size_t i = 0; i < std::min(size_t(10), path.size()); ++i) {
+                std::cout << "  Move " << (i + 1) << ": ("
+                          << path[i].row << "," << path[i].col << ")\n";
             }
-        }
-
-        std::cout << "Squares with 2 moves (corners): " << corners << "\n";
-        std::cout << "Squares with 3-4 moves (edges): " << edges << "\n";
-        std::cout << "Squares with 6-8 moves (center): " << center << "\n\n";
-
-        // Visualize move counts
-        std::cout << "=== Move Count Heatmap ===\n";
-        std::cout << "(number = possible moves from that square)\n\n";
-        for (int row = 0; row < 8; ++row) {
-            for (int col = 0; col < 8; ++col) {
-                std::cout << board.countValidMoves(row, col) << " ";
+            if (path.size() > 10) {
+                std::cout << "  ... (" << (path.size() - 10) << " more moves)\n";
             }
             std::cout << "\n";
+
+            // Print the board with move numbers
+            board5.print();
+        } else {
+            std::cout << "✗ No solution found\n";
+            std::cout << "  Time: " << duration.count() << " ms\n";
+            std::cout << "  Backtracks: " << solver5.getBacktrackCount() << "\n";
         }
 
-        std::cout << "\n✓ All move validation tests passed!\n";
+        // Test on 6x6 board
+        std::cout << "\n=== Testing on 6x6 Board ===\n\n";
+        Board board6(6, 6);
+        Solver solver6(board6);
+
+        std::cout << "Attempting to solve 6x6 board starting at (0,0)...\n";
+
+        start = std::chrono::high_resolution_clock::now();
+        bool solved6 = solver6.solve(0, 0, TourType::OPEN);
+        end = std::chrono::high_resolution_clock::now();
+
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+        if (solved6) {
+            std::cout << "✓ Solution found!\n";
+            std::cout << "  Time: " << duration.count() << " ms\n";
+            std::cout << "  Backtracks: " << solver6.getBacktrackCount() << "\n";
+            std::cout << "  Moves: " << solver6.getPath().size() << "\n\n";
+
+            board6.print();
+        } else {
+            std::cout << "✗ No solution found\n";
+            std::cout << "  Time: " << duration.count() << " ms\n";
+            std::cout << "  Backtracks: " << solver6.getBacktrackCount() << "\n";
+        }
+
+        // Note about 8x8
+        std::cout << "\n=== Note ===\n";
+        std::cout << "Without Warnsdorff's heuristic, solving an 8x8 board\n";
+        std::cout << "takes too long (minutes to hours). This naive backtracking\n";
+        std::cout << "demonstrates why we need intelligent move ordering!\n\n";
+        std::cout << "Next commit will add Warnsdorff's heuristic for dramatic speedup.\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
