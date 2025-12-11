@@ -100,11 +100,72 @@ int main() {
             std::cout << "  Backtracks: " << solver8.getBacktrackCount() << "\n";
         }
 
+        // Test CLOSED tours (harder!)
+        std::cout << "\n=== Testing CLOSED Tours (Hamiltonian Cycles) ===\n\n";
+        std::cout << "A closed tour requires the knight to end one move away from\n";
+        std::cout << "the starting position, forming a complete cycle.\n";
+        std::cout << "This is significantly harder than an open tour!\n\n";
+
+        // Test 6x6 closed tour
+        std::cout << "Attempting CLOSED tour on 6x6 board...\n";
+        Board board6Closed(6, 6);
+        Solver solver6Closed(board6Closed);
+
+        start = std::chrono::high_resolution_clock::now();
+        bool solved6Closed = solver6Closed.solve(0, 0, TourType::CLOSED);
+        end = std::chrono::high_resolution_clock::now();
+
+        auto duration6Closed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+        if (solved6Closed) {
+            std::cout << "✓ Closed tour found!\n";
+            std::cout << "  Time: " << duration6Closed.count() << " μs\n";
+            std::cout << "  Backtracks: " << solver6Closed.getBacktrackCount() << "\n";
+            std::cout << "  The knight can return to start from position ("
+                      << solver6Closed.getPath().back().row << ","
+                      << solver6Closed.getPath().back().col << ")\n\n";
+            board6Closed.print();
+        } else {
+            std::cout << "✗ No closed tour found (some boards/positions don't have closed tours)\n";
+            std::cout << "  Time: " << duration6Closed.count() << " μs\n";
+            std::cout << "  Backtracks: " << solver6Closed.getBacktrackCount() << "\n\n";
+        }
+
+        // Test 8x8 closed tour
+        std::cout << "\nAttempting CLOSED tour on 8x8 board...\n";
+        Board board8Closed(8, 8);
+        Solver solver8Closed(board8Closed);
+
+        start = std::chrono::high_resolution_clock::now();
+        bool solved8Closed = solver8Closed.solve(0, 0, TourType::CLOSED);
+        end = std::chrono::high_resolution_clock::now();
+
+        auto duration8Closed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+        if (solved8Closed) {
+            std::cout << "✓ Closed tour found!\n";
+            std::cout << "  Time: " << duration8Closed.count() << " μs ("
+                      << (duration8Closed.count() / 1000.0) << " ms)\n";
+            std::cout << "  Backtracks: " << solver8Closed.getBacktrackCount() << "\n";
+            std::cout << "  The knight can return to start from position ("
+                      << solver8Closed.getPath().back().row << ","
+                      << solver8Closed.getPath().back().col << ")\n\n";
+            board8Closed.print();
+        } else {
+            std::cout << "✗ No closed tour found from this starting position\n";
+            std::cout << "  Time: " << duration8Closed.count() << " μs\n";
+            std::cout << "  Backtracks: " << solver8Closed.getBacktrackCount() << "\n";
+            std::cout << "  Note: Closed tours are harder and may require different start positions\n\n";
+        }
+
         std::cout << "\n=== Advanced Backtracking with Multiple Optimizations ===\n";
         std::cout << "The solver uses:\n";
         std::cout << "  1. Warnsdorff's heuristic (prefer moves with fewer onward options)\n";
         std::cout << "  2. Tie-breaking (prefer edge/corner squares when degrees are equal)\n";
         std::cout << "  3. Early termination (skip moves that create isolated squares)\n\n";
+        std::cout << "Features:\n";
+        std::cout << "  • Open Tours: Visit all squares exactly once\n";
+        std::cout << "  • Closed Tours: Form a complete cycle back to start\n\n";
         std::cout << "Result: Sub-millisecond performance with zero backtracking!\n";
         std::cout << "Without these optimizations, an 8x8 board would take minutes to hours.\n";
 
