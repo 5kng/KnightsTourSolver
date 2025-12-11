@@ -75,4 +75,38 @@ private:
      * @return true if all squares visited (and closed tour requirements met)
      */
     [[nodiscard]] bool isSolution(int moveNumber) const;
+
+    /**
+     * @brief Calculate the degree of a move (number of available moves from that position)
+     *
+     * The degree represents how many valid unvisited squares the knight can reach
+     * from the given position. This is a key metric for move ordering heuristics.
+     *
+     * @param move The move to calculate degree for
+     * @return Number of valid unvisited moves from that position
+     */
+    [[nodiscard]] int calculateDegree(const Move& move) const;
+
+    /**
+     * @brief Count available moves from a given position
+     *
+     * Helper function to determine how many unvisited squares are accessible
+     * from the specified position. Used for move ordering and heuristics.
+     *
+     * @param row Row position to check from
+     * @param col Column position to check from
+     * @return Number of valid unvisited moves available
+     */
+    [[nodiscard]] int countAvailableMoves(int row, int col) const;
+
+    /**
+     * @brief Sort moves using a move ordering heuristic
+     *
+     * Sorts moves in-place based on their desirability. Currently supports
+     * ordering by degree (Warnsdorff's heuristic foundation).
+     * Lower degree moves are preferred as they visit "harder to reach" squares first.
+     *
+     * @param moves Vector of moves to sort (modified in-place)
+     */
+    void sortMoves(std::vector<Move>& moves) const;
 };

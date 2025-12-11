@@ -48,6 +48,9 @@ bool Solver::backtrack(int row, int col, int moveNumber) {
     // Get all valid unvisited moves from current position
     auto validMoves = board_.getValidMoves(row, col, true);
 
+    // Apply Warnsdorff's heuristic: sort moves by degree (ascending)
+    sortMoves(validMoves);
+
     // Try each valid move
     for (const auto& move : validMoves) {
         // Make move
@@ -88,5 +91,27 @@ bool Solver::isSolution(int moveNumber) const {
     return std::any_of(validMoves.begin(), validMoves.end(),
         [this](const Move& m) {
             return m.row == startRow_ && m.col == startCol_;
+        });
+}
+
+int Solver::calculateDegree(const Move& move) const {
+    return countAvailableMoves(move.row, move.col);
+}
+
+int Solver::countAvailableMoves(int row, int col) const {
+    // Get all valid unvisited moves from this position
+    auto moves = board_.getValidMoves(row, col, true);
+    return static_cast<int>(moves.size());
+}
+
+void Solver::sortMoves(std::vector<Move>& moves) const {
+    // Sort moves by degree (ascending order)
+    // Warnsdorff's heuristic: choose squares with fewest onward moves first
+    // This visits "harder to reach" corners and edges early in the search
+    std::sort(moves.begin(), moves.end(),
+        [this](const Move& a, const Move& b) {
+            int degreeA = calculateDegree(a);
+            int degreeB = calculateDegree(b);
+            return degreeA < degreeB;  // Prefer moves with lower degree
         });
 }
