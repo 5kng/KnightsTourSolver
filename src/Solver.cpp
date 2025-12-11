@@ -53,6 +53,12 @@ bool Solver::backtrack(int row, int col, int moveNumber) {
 
     // Try each valid move
     for (const auto& move : validMoves) {
+        // Early termination: skip moves that create dead ends
+        // (unless it's our only option)
+        if (validMoves.size() > 1 && createsDeadEnd(move, moveNumber)) {
+            continue;  // Skip this move - it would isolate a square
+        }
+
         // Make move
         board_.set(move.row, move.col, moveNumber);
         path_.push_back(move);
@@ -129,4 +135,26 @@ void Solver::sortMoves(std::vector<Move>& moves) const {
             // This prioritizes visiting edge/corner squares earlier
             return distanceFromCenter(a) > distanceFromCenter(b);
         });
+}
+
+bool Solver::createsDeadEnd(const Move& move, int moveNumber) const {
+    // Temporarily make the move
+    board_.set(move.row, move.col, moveNumber);
+
+    // Check if any neighbor of this move would become isolated
+    bool hasDeadEnd = false;
+    auto neighbors = board_.getValidMoves(move.row, move.col, true);
+
+    for (const auto& neighbor : neighbors) {
+        // If this neighbor would have no valid moves after our move, it's a dead end
+        if (countAvailableMoves(neighbor.row, neighbor.col) == 0) {
+            hasDeadEnd = true;
+            break;
+        }
+    }
+
+    // Undo the temporary move
+    board_.set(move.row, move.col, 0);
+
+    return hasDeadEnd;
 }

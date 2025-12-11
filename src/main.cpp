@@ -100,10 +100,11 @@ int main() {
             std::cout << "  Backtracks: " << solver8.getBacktrackCount() << "\n";
         }
 
-        std::cout << "\n=== Warnsdorff's Heuristic with Tie-Breaking! ===\n";
+        std::cout << "\n=== Advanced Backtracking with Multiple Optimizations ===\n";
         std::cout << "The solver uses:\n";
         std::cout << "  1. Warnsdorff's heuristic (prefer moves with fewer onward options)\n";
-        std::cout << "  2. Tie-breaking (prefer edge/corner squares when degrees are equal)\n\n";
+        std::cout << "  2. Tie-breaking (prefer edge/corner squares when degrees are equal)\n";
+        std::cout << "  3. Early termination (skip moves that create isolated squares)\n\n";
         std::cout << "Result: Sub-millisecond performance with zero backtracking!\n";
         std::cout << "Without these optimizations, an 8x8 board would take minutes to hours.\n";
 

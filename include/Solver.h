@@ -109,4 +109,17 @@ private:
      * @param moves Vector of moves to sort (modified in-place)
      */
     void sortMoves(std::vector<Move>& moves) const;
+
+    /**
+     * @brief Check if a move would create isolated squares (dead ends)
+     *
+     * Performs look-ahead pruning by temporarily making a move and checking
+     * if any of its neighbors would become isolated (degree 0). This helps
+     * avoid exploring paths that will inevitably fail.
+     *
+     * @param move The move to check
+     * @param moveNumber The move number that would be assigned
+     * @return true if the move creates dead ends, false otherwise
+     */
+    [[nodiscard]] bool createsDeadEnd(const Move& move, int moveNumber) const;
 };
