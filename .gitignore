@@ -64,3 +64,8 @@ benchmarks/output/
 # Documentation
 docs/html/
 docs/latex/
+
+# Documentation and planning files (keep local only)
+*.md
+!README.md
+!LICENSE.md
