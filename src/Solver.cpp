@@ -53,6 +53,12 @@ bool Solver::backtrack(int row, int col, int moveNumber) {
 
     // Try each valid move
     for (const auto& move : validMoves) {
+        // Early termination: skip moves that create dead ends
+        // (unless it's our only option)
+        if (validMoves.size() > 1 && createsDeadEnd(move, moveNumber)) {
+            continue;  // Skip this move - it would isolate a square
+        }
+
         // Make move
         board_.set(move.row, move.col, moveNumber);
         path_.push_back(move);
@@ -105,13 +111,50 @@ int Solver::countAvailableMoves(int row, int col) const {
 }
 
 void Solver::sortMoves(std::vector<Move>& moves) const {
-    // Sort moves by degree (ascending order)
+    // Helper function to calculate Manhattan distance from board center
+    auto distanceFromCenter = [this](const Move& move) {
+        int centerRow = static_cast<int>(board_.height()) / 2;
+        int centerCol = static_cast<int>(board_.width()) / 2;
+        return std::abs(move.row - centerRow) + std::abs(move.col - centerCol);
+    };
+
+    // Sort moves by degree (ascending order) with tie-breaking
     // Warnsdorff's heuristic: choose squares with fewest onward moves first
     // This visits "harder to reach" corners and edges early in the search
     std::sort(moves.begin(), moves.end(),
-        [this](const Move& a, const Move& b) {
+        [this, &distanceFromCenter](const Move& a, const Move& b) {
             int degreeA = calculateDegree(a);
             int degreeB = calculateDegree(b);
-            return degreeA < degreeB;  // Prefer moves with lower degree
+
+            // Primary criterion: prefer lower degree (Warnsdorff's rule)
+            if (degreeA != degreeB) {
+                return degreeA < degreeB;
+            }
+
+            // Tie-breaker: when degrees are equal, prefer moves farther from center
+            // This prioritizes visiting edge/corner squares earlier
+            return distanceFromCenter(a) > distanceFromCenter(b);
         });
+}
+
+bool Solver::createsDeadEnd(const Move& move, int moveNumber) const {
+    // Temporarily make the move
+    board_.set(move.row, move.col, moveNumber);
+
+    // Check if any neighbor of this move would become isolated
+    bool hasDeadEnd = false;
+    auto neighbors = board_.getValidMoves(move.row, move.col, true);
+
+    for (const auto& neighbor : neighbors) {
+        // If this neighbor would have no valid moves after our move, it's a dead end
+        if (countAvailableMoves(neighbor.row, neighbor.col) == 0) {
+            hasDeadEnd = true;
+            break;
+        }
+    }
+
+    // Undo the temporary move
+    board_.set(move.row, move.col, 0);
+
+    return hasDeadEnd;
 }
