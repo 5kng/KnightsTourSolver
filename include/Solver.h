@@ -12,6 +12,17 @@ enum class TourType {
 };
 
 /**
+ * @brief Statistics about a solution path
+ */
+struct PathStatistics {
+    size_t totalMoves;          // Total number of moves in the path
+    size_t cornerVisits;        // Number of corner squares visited
+    size_t edgeVisits;          // Number of edge squares visited (excluding corners)
+    size_t centerVisits;        // Number of center squares visited
+    double averageDistanceFromCenter;  // Average Manhattan distance from board center
+};
+
+/**
  * @brief Solves the Knight's Tour problem using backtracking
  *
  * This solver uses naive backtracking without heuristics.
@@ -51,6 +62,18 @@ public:
      * @brief Reset solver state
      */
     void reset();
+
+    /**
+     * @brief Validate that the current path is a legal knight's tour
+     * @return true if the path is valid, false otherwise
+     */
+    [[nodiscard]] bool validatePath() const;
+
+    /**
+     * @brief Get statistics about the solution path
+     * @return PathStatistics structure with path metrics
+     */
+    [[nodiscard]] PathStatistics getPathStatistics() const;
 
 private:
     Board& board_;

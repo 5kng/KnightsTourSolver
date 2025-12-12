@@ -24,7 +24,18 @@ int main() {
             std::cout << "✓ Solution found!\n";
             std::cout << "  Time: " << duration.count() << " ms\n";
             std::cout << "  Backtracks: " << solver5.getBacktrackCount() << "\n";
-            std::cout << "  Moves: " << solver5.getPath().size() << "\n\n";
+            std::cout << "  Moves: " << solver5.getPath().size() << "\n";
+
+            // Validate the solution
+            bool isValid = solver5.validatePath();
+            std::cout << "  Path valid: " << (isValid ? "✓ Yes" : "✗ No") << "\n";
+
+            // Get path statistics
+            auto stats = solver5.getPathStatistics();
+            std::cout << "  Corner visits: " << stats.cornerVisits << "/4\n";
+            std::cout << "  Edge visits: " << stats.edgeVisits << "\n";
+            std::cout << "  Center visits: " << stats.centerVisits << "\n";
+            std::cout << "  Avg distance from center: " << stats.averageDistanceFromCenter << "\n\n";
 
             // Display the solution
             std::cout << "Solution path (first 10 moves):\n";
