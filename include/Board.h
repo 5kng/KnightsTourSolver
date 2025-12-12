@@ -91,6 +91,19 @@ public:
     void print() const;
 
     /**
+     * @brief Print the board with row/column labels and optional highlights
+     * @param highlightStart Optional starting position to highlight
+     * @param highlightEnd Optional ending position to highlight
+     */
+    void printDetailed(const Move* highlightStart = nullptr, const Move* highlightEnd = nullptr) const;
+
+    /**
+     * @brief Print a compact representation (for large boards)
+     * @param maxSize Maximum dimension to print at full size
+     */
+    void printCompact(size_t maxSize = 12) const;
+
+    /**
      * @brief Get all valid knight moves from a position
      * @param row Current row
      * @param col Current column

@@ -70,6 +70,93 @@ void Board::print() const {
     std::cout << std::string((cellWidth + 1) * width_ + 1, '-') << "\n";
 }
 
+void Board::printDetailed(const Move* highlightStart, const Move* highlightEnd) const {
+    // Calculate width needed for largest move number
+    int maxMoveNumber = static_cast<int>(size());
+    int cellWidth = std::max(3, static_cast<int>(std::to_string(maxMoveNumber).length()) + 1);
+
+    std::cout << "\nBoard (" << width_ << "x" << height_ << ") - Detailed View:\n";
+
+    // Print column headers
+    std::cout << "    ";
+    for (size_t col = 0; col < width_; ++col) {
+        std::cout << std::setw(cellWidth) << col << " ";
+    }
+    std::cout << "\n";
+    std::cout << "   " << std::string((cellWidth + 1) * width_ + 1, '-') << "\n";
+
+    // Print board with row labels
+    for (size_t row = 0; row < height_; ++row) {
+        std::cout << std::setw(2) << row << " |";
+        for (size_t col = 0; col < width_; ++col) {
+            int value = board_[toIndex(row, col)];
+
+            // Check if this position should be highlighted
+            bool isStart = highlightStart && highlightStart->row == static_cast<int>(row) && highlightStart->col == static_cast<int>(col);
+            bool isEnd = highlightEnd && highlightEnd->row == static_cast<int>(row) && highlightEnd->col == static_cast<int>(col);
+
+            if (value == 0) {
+                std::cout << std::setw(cellWidth) << "." << "|";
+            } else {
+                if (isStart) {
+                    std::cout << std::setw(cellWidth - 1) << value << "S|";  // S for start
+                } else if (isEnd) {
+                    std::cout << std::setw(cellWidth - 1) << value << "E|";  // E for end
+                } else {
+                    std::cout << std::setw(cellWidth) << value << "|";
+                }
+            }
+        }
+        std::cout << " " << row << "\n";
+    }
+
+    std::cout << "   " << std::string((cellWidth + 1) * width_ + 1, '-') << "\n";
+    std::cout << "    ";
+    for (size_t col = 0; col < width_; ++col) {
+        std::cout << std::setw(cellWidth) << col << " ";
+    }
+    std::cout << "\n";
+}
+
+void Board::printCompact(size_t maxSize) const {
+    // If board is small enough, just use detailed print
+    if (width_ <= maxSize && height_ <= maxSize) {
+        printDetailed();
+        return;
+    }
+
+    std::cout << "\nBoard (" << width_ << "x" << height_ << ") - Compact View:\n";
+    std::cout << "Board too large for full display. Showing corner samples:\n\n";
+
+    // Show top-left corner
+    std::cout << "Top-left (4x4):\n";
+    size_t sampleSize = std::min(size_t(4), std::min(width_, height_));
+
+    for (size_t row = 0; row < sampleSize; ++row) {
+        for (size_t col = 0; col < sampleSize; ++col) {
+            int value = board_[toIndex(row, col)];
+            std::cout << std::setw(4) << (value == 0 ? "." : std::to_string(value));
+        }
+        std::cout << "\n";
+    }
+
+    // Show bottom-right corner if board is large
+    if (width_ > sampleSize || height_ > sampleSize) {
+        std::cout << "\nBottom-right (4x4):\n";
+        size_t startRow = height_ > sampleSize ? height_ - sampleSize : 0;
+        size_t startCol = width_ > sampleSize ? width_ - sampleSize : 0;
+
+        for (size_t row = startRow; row < height_; ++row) {
+            for (size_t col = startCol; col < width_; ++col) {
+                int value = board_[toIndex(row, col)];
+                std::cout << std::setw(4) << (value == 0 ? "." : std::to_string(value));
+            }
+            std::cout << "\n";
+        }
+    }
+    std::cout << "\n";
+}
+
 std::vector<Move> Board::getValidMoves(int row, int col, bool onlyUnvisited) const {
     std::vector<Move> validMoves;
     validMoves.reserve(8);  // Maximum possible knight moves

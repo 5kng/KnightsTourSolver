@@ -104,7 +104,11 @@ int main() {
             std::cout << "  Backtracks: " << solver8.getBacktrackCount() << "\n";
             std::cout << "  Moves: " << solver8.getPath().size() << "\n\n";
 
-            board8.print();
+            // Use detailed print with start/end highlighting
+            const auto& path8 = solver8.getPath();
+            Move startPos = {0, 0};
+            Move endPos = path8.back();
+            board8.printDetailed(&startPos, &endPos);
         } else {
             std::cout << "✗ No solution found\n";
             std::cout << "  Time: " << durationMicro.count() << " μs\n";
