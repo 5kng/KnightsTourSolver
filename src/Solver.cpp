@@ -158,3 +158,109 @@ bool Solver::createsDeadEnd(const Move& move, int moveNumber) const {
 
     return hasDeadEnd;
 }
+
+bool Solver::validatePath() const {
+    // Empty path is invalid
+    if (path_.empty()) {
+        return false;
+    }
+
+    // Path should cover all squares
+    if (path_.size() != board_.size()) {
+        return false;
+    }
+
+    // Check that all moves are unique (no square visited twice)
+    std::vector<bool> visited(board_.size(), false);
+    for (const auto& move : path_) {
+        // Check move is within bounds
+        if (!board_.isValid(move.row, move.col)) {
+            return false;
+        }
+
+        // Convert to index and check if already visited
+        size_t idx = static_cast<size_t>(move.row) * board_.width() + static_cast<size_t>(move.col);
+        if (visited[idx]) {
+            return false;  // Square visited twice!
+        }
+        visited[idx] = true;
+    }
+
+    // Check that consecutive moves are legal knight moves
+    for (size_t i = 1; i < path_.size(); ++i) {
+        const auto& prev = path_[i - 1];
+        const auto& curr = path_[i];
+
+        int rowDiff = std::abs(curr.row - prev.row);
+        int colDiff = std::abs(curr.col - prev.col);
+
+        // Valid knight move: (2,1) or (1,2)
+        bool isValidKnightMove = (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
+        if (!isValidKnightMove) {
+            return false;
+        }
+    }
+
+    // If closed tour, check that last move can reach first move
+    if (tourType_ == TourType::CLOSED && path_.size() > 1) {
+        const auto& first = path_.front();
+        const auto& last = path_.back();
+
+        int rowDiff = std::abs(first.row - last.row);
+        int colDiff = std::abs(first.col - last.col);
+
+        bool canClose = (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
+        if (!canClose) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+PathStatistics Solver::getPathStatistics() const {
+    PathStatistics stats{};
+    stats.totalMoves = path_.size();
+    stats.cornerVisits = 0;
+    stats.edgeVisits = 0;
+    stats.centerVisits = 0;
+    stats.averageDistanceFromCenter = 0.0;
+
+    if (path_.empty()) {
+        return stats;
+    }
+
+    int centerRow = static_cast<int>(board_.height()) / 2;
+    int centerCol = static_cast<int>(board_.width()) / 2;
+    int maxRow = static_cast<int>(board_.height()) - 1;
+    int maxCol = static_cast<int>(board_.width()) - 1;
+
+    double totalDistance = 0.0;
+
+    for (const auto& move : path_) {
+        // Check if corner
+        bool isCorner = (move.row == 0 && move.col == 0) ||
+                        (move.row == 0 && move.col == maxCol) ||
+                        (move.row == maxRow && move.col == 0) ||
+                        (move.row == maxRow && move.col == maxCol);
+
+        // Check if edge (but not corner)
+        bool isEdge = !isCorner && (move.row == 0 || move.row == maxRow ||
+                                     move.col == 0 || move.col == maxCol);
+
+        if (isCorner) {
+            ++stats.cornerVisits;
+        } else if (isEdge) {
+            ++stats.edgeVisits;
+        } else {
+            ++stats.centerVisits;
+        }
+
+        // Calculate Manhattan distance from center
+        totalDistance += std::abs(move.row - centerRow) + std::abs(move.col - centerCol);
+    }
+
+    stats.averageDistanceFromCenter = totalDistance / static_cast<double>(path_.size());
+
+    return stats;
+}
