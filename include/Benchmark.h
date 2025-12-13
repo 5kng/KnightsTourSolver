@@ -3,10 +3,13 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -310,3 +313,119 @@ private:
     size_t warmupRuns_;
     bool verbose_;
 };
+
+/**
+ * @brief Print benchmark results in a formatted table
+ * @param results Vector of benchmark results to display
+ */
+inline void printResults(const std::vector<BenchmarkResult>& results) {
+    if (results.empty()) {
+        std::cout << "No benchmark results to display.\n";
+        return;
+    }
+
+    std::cout << "\n=== Benchmark Results ===\n\n";
+    
+    // Header
+    std::cout << std::left
+              << std::setw(20) << "Configuration"
+              << std::setw(12) << "Mean (μs)"
+              << std::setw(12) << "Median (μs)"
+              << std::setw(12) << "StdDev (μs)"
+              << std::setw(12) << "Min (μs)"
+              << std::setw(12) << "Max (μs)"
+              << std::setw(12) << "P95 (μs)"
+              << std::setw(12) << "P99 (μs)"
+              << std::setw(12) << "Success %"
+              << std::setw(10) << "Runs"
+              << "\n";
+    
+    std::cout << std::string(130, '-') << "\n";
+    
+    // Data rows
+    for (const auto& result : results) {
+        std::cout << std::left << std::fixed << std::setprecision(2)
+                  << std::setw(20) << result.name
+                  << std::setw(12) << result.timing.mean
+                  << std::setw(12) << result.timing.median
+                  << std::setw(12) << result.timing.stdDev
+                  << std::setw(12) << result.timing.min
+                  << std::setw(12) << result.timing.max
+                  << std::setw(12) << result.timing.p95
+                  << std::setw(12) << result.timing.p99
+                  << std::setw(12) << result.successRate
+                  << std::setw(10) << result.totalRuns
+                  << "\n";
+    }
+    
+    std::cout << "\n";
+}
+
+/**
+ * @brief Export benchmark results to CSV file
+ * @param results Vector of benchmark results to export
+ * @param filename Output filename
+ * @return true if export successful, false otherwise
+ */
+inline bool exportToCSV(const std::vector<BenchmarkResult>& results, const std::string& filename) {
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file '" << filename << "' for writing.\n";
+        return false;
+    }
+
+    // CSV Header
+    file << "Configuration,BoardSize,TourType,Mean_us,Median_us,StdDev_us,Min_us,Max_us,"
+         << "P95_us,P99_us,Range_us,Variance,SuccessRate,Runs\n";
+
+    // Data rows
+    for (const auto& result : results) {
+        file << result.name << ","
+             << result.boardSize << ","
+             << (result.tourType == TourType::OPEN ? "OPEN" : "CLOSED") << ","
+             << result.timing.mean << ","
+             << result.timing.median << ","
+             << result.timing.stdDev << ","
+             << result.timing.min << ","
+             << result.timing.max << ","
+             << result.timing.p95 << ","
+             << result.timing.p99 << ","
+             << result.timing.range << ","
+             << result.timing.variance << ","
+             << result.successRate << ","
+             << result.totalRuns << "\n";
+    }
+
+    file.close();
+    std::cout << "Results exported to '" << filename << "'\n";
+    return true;
+}
+
+/**
+ * @brief Print a single benchmark result with detailed statistics
+ * @param result Benchmark result to display
+ */
+inline void printDetailedResult(const BenchmarkResult& result) {
+    std::cout << "\n=== " << result.name << " ===\n";
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Board size:    " << result.boardSize << "x" << result.boardSize << "\n";
+    std::cout << "Tour type:     " << (result.tourType == TourType::OPEN ? "OPEN" : "CLOSED") << "\n";
+    std::cout << "Runs:          " << result.totalRuns << "\n";
+    std::cout << "Success rate:  " << result.successRate << "%\n\n";
+    
+    std::cout << "Timing Statistics (microseconds):\n";
+    std::cout << "  Mean:        " << result.timing.mean << " μs\n";
+    std::cout << "  Median:      " << result.timing.median << " μs\n";
+    std::cout << "  Std Dev:     " << result.timing.stdDev << " μs\n";
+    std::cout << "  Min:         " << result.timing.min << " μs\n";
+    std::cout << "  Max:         " << result.timing.max << " μs\n";
+    std::cout << "  Range:       " << result.timing.range << " μs\n";
+    std::cout << "  P95:         " << result.timing.p95 << " μs\n";
+    std::cout << "  P99:         " << result.timing.p99 << " μs\n";
+    std::cout << "\n";
+    
+    // Convert to milliseconds if > 1000 μs
+    if (result.timing.median > 1000.0) {
+        std::cout << "  Median:      " << (result.timing.median / 1000.0) << " ms\n";
+    }
+}
