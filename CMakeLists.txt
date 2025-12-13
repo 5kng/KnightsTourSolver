@@ -30,6 +30,7 @@ set(SOURCES
     src/main.cpp
     src/Board.cpp
     src/Solver.cpp
+    src/Benchmark.cpp
 )
 
 # Create executable
