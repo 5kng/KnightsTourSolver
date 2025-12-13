@@ -4,9 +4,14 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <numeric>
+#include <string>
 #include <vector>
+
+#include "Board.h"
+#include "Solver.h"
 
 /**
  * @brief High-precision timer for performance measurement
@@ -173,4 +178,135 @@ private:
         double weight = index - lower;
         return sortedValues[lower] * (1.0 - weight) + sortedValues[upper] * weight;
     }
+};
+
+/**
+ * @brief Result of a single benchmark run
+ */
+struct BenchmarkResult {
+    std::string name;           // Benchmark name/description
+    size_t boardSize;           // Board dimension (e.g., 8 for 8x8)
+    TourType tourType;          // OPEN or CLOSED
+    Statistics timing;          // Timing statistics (in microseconds)
+    double successRate;         // Percentage of successful solves
+    size_t totalRuns;           // Number of benchmark iterations
+};
+
+/**
+ * @brief Suite for running systematic performance benchmarks
+ */
+class BenchmarkSuite {
+public:
+    /**
+     * @brief Construct benchmark suite with default parameters
+     * @param iterations Number of runs per configuration (default 1000)
+     * @param warmupRuns Number of warmup runs to eliminate cache effects (default 10)
+     */
+    explicit BenchmarkSuite(size_t iterations = 1000, size_t warmupRuns = 10)
+        : iterations_(iterations)
+        , warmupRuns_(warmupRuns)
+        , verbose_(false)
+    {}
+
+    /**
+     * @brief Enable/disable verbose progress reporting
+     * @param enabled true to show progress during benchmarks
+     */
+    void setVerbose(bool enabled) {
+        verbose_ = enabled;
+    }
+
+    /**
+     * @brief Benchmark a specific board size and tour type
+     * @param boardSize Board dimension (e.g., 8 for 8x8)
+     * @param tourType Type of tour to find (OPEN or CLOSED)
+     * @param startRow Starting row (default 0)
+     * @param startCol Starting column (default 0)
+     * @return Benchmark results with timing statistics
+     */
+    [[nodiscard]] BenchmarkResult run(size_t boardSize, TourType tourType = TourType::OPEN,
+                                      int startRow = 0, int startCol = 0) {
+        std::string name = std::to_string(boardSize) + "x" + std::to_string(boardSize);
+        if (tourType == TourType::CLOSED) {
+            name += " (closed)";
+        }
+
+        if (verbose_) {
+            std::cout << "Running benchmark: " << name << " [" << iterations_ << " iterations]\n";
+        }
+
+        // Warmup runs
+        if (warmupRuns_ > 0) {
+            for (size_t i = 0; i < warmupRuns_; ++i) {
+                Board warmupBoard(boardSize, boardSize);
+                Solver warmupSolver(warmupBoard);
+                warmupSolver.solve(startRow, startCol, tourType);
+            }
+        }
+
+        // Actual benchmark runs
+        std::vector<double> times;
+        times.reserve(iterations_);
+        size_t successes = 0;
+
+        for (size_t i = 0; i < iterations_; ++i) {
+            Board board(boardSize, boardSize);
+            Solver solver(board);
+
+            Timer timer;
+            bool solved = solver.solve(startRow, startCol, tourType);
+            long long elapsed = timer.elapsedMicroseconds();
+
+            times.push_back(static_cast<double>(elapsed));
+            if (solved) {
+                ++successes;
+            }
+
+            // Progress reporting
+            if (verbose_ && (i + 1) % 100 == 0) {
+                std::cout << "  Progress: " << (i + 1) << "/" << iterations_ << "\n";
+            }
+        }
+
+        BenchmarkResult result;
+        result.name = name;
+        result.boardSize = boardSize;
+        result.tourType = tourType;
+        result.timing = Statistics::compute(times);
+        result.successRate = (static_cast<double>(successes) / iterations_) * 100.0;
+        result.totalRuns = iterations_;
+
+        if (verbose_) {
+            std::cout << "  Completed: " << name << "\n";
+            std::cout << "  Success rate: " << result.successRate << "%\n";
+            std::cout << "  Median time: " << result.timing.median << " μs\n\n";
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Run benchmarks across multiple board sizes
+     * @param sizes Vector of board sizes to test
+     * @param tourType Type of tour to find
+     * @return Vector of benchmark results
+     */
+    [[nodiscard]] std::vector<BenchmarkResult> runMultiple(
+        const std::vector<size_t>& sizes,
+        TourType tourType = TourType::OPEN
+    ) {
+        std::vector<BenchmarkResult> results;
+        results.reserve(sizes.size());
+
+        for (size_t size : sizes) {
+            results.push_back(run(size, tourType));
+        }
+
+        return results;
+    }
+
+private:
+    size_t iterations_;
+    size_t warmupRuns_;
+    bool verbose_;
 };
