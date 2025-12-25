@@ -60,8 +60,7 @@ void animateSolution(const Board& board, const std::vector<Move>& path) {
         std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
     }
     
-    std::cout << "\n✓ Tour complete! Press Enter to continue...";
-    std::cin.get();
+    std::cout << "\n✓ Tour complete!\n";
 }
 
 void quickSolve() {
