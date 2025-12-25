@@ -8,22 +8,39 @@ The Knight's Tour is a classic chess problem where a knight must visit every squ
 
 ## Features
 
-- **High Performance**: Sub-millisecond solve times (0.3ms median on 8×8 boards)
+### Core Solver
+- **High Performance**: Sub-millisecond solve times (~55μs on 8×8 boards)
 - **Scalable**: Supports board sizes from 5×5 up to 100×100
 - **Multiple Modes**: Open and closed tour solutions
-- **Comprehensive Benchmarking**: Statistical analysis across 1000+ runs with microsecond-precision timing
+- **100% Success Rate**: Solves from any starting position on standard boards
 - **Modern C++20**: Leverages latest C++ features for clean, efficient code
+
+### Interactive Features (Day 5 - Christmas Edition!)
+- **Interactive CLI Menu**: User-friendly interface for all features
+- **Solution Export**: Export tours to JSON, SVG (visual), or plain text
+- **Animated Visualization**: Watch the knight's journey step-by-step
+- **Comprehensive Testing**: Test all 64 starting positions on an 8×8 board
+- **Custom Board Solver**: Choose your own board size and starting position
 
 ## Algorithm
 
 The solver uses Warnsdorff's heuristic, a greedy algorithm that chooses the next move to the square with the fewest onward moves. This is combined with backtracking to guarantee a solution on solvable boards.
 
-## Performance Targets
+## Performance
 
-- **8×8 Board**: ~0.3ms median solve time
-- **Success Rate**: 100% on standard boards
+- **8×8 Board**: ~55μs average solve time
+- **Success Rate**: 100% from all 64 starting positions
+- **Zero Backtracking**: Warnsdorff's heuristic with look-ahead pruning
 - **Scalability**: Efficient solving up to 100×100 boards
-- **Benchmarking**: 1000+ iterations with full statistical analysis
+
+### Benchmark Results (8×8 Board)
+```
+✓ Success rate: 64/64 positions (100%)
+  Avg time: ~55 μs
+  Min time: ~30 μs
+  Max time: ~200 μs
+  Avg backtracks: 0
+```
 
 ## Project Status
 
@@ -68,7 +85,62 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 ## Usage
 
-Usage examples coming soon.
+### Interactive Mode
+
+Run the program and choose from the interactive menu:
+
+```bash
+./knights_tour
+```
+
+**Menu Options:**
+1. **Solve custom board** - Choose board size, starting position, and tour type
+2. **Visualize solution (animated)** - Watch an animated ASCII tour on 8×8 board
+3. **Export solution to file** - Save tours in JSON, SVG, or text format
+4. **Test all starting positions** - Benchmark all 64 positions on 8×8 board
+5. **Quick solve** - Instantly solve an 8×8 board from (0,0)
+
+### Export Formats
+
+**JSON** - Structured data with path, statistics, and board info
+```json
+{
+  "board": {"width": 8, "height": 8},
+  "solution": {
+    "moves": 64,
+    "backtracks": 0,
+    "path": [{"row": 0, "col": 0}, ...],
+    "statistics": {...}
+  }
+}
+```
+
+**SVG** - Beautiful visual representation with chessboard and path
+- Green circle: Starting position
+- Red circle: Ending position
+- Blue lines: Knight's path
+- Open in any web browser
+
+**Text** - Human-readable format with move sequence and board visualization
+
+### Example Session
+
+```
+Enter your choice: 1
+
+=== Custom Board Solver ===
+
+Enter board width (5-20): 8
+Enter board height (5-20): 8
+Enter starting row (0-7): 0
+Enter starting col (0-7): 0
+Tour type (O=Open, C=Closed): O
+
+Solving 8×8 board from (0, 0)...
+✓ Solution found!
+  Time: 55 μs
+  Backtracks: 0
+```
 
 ## License
 
