@@ -3,9 +3,25 @@
 #include <chrono>
 #include <thread>
 #include <limits>
+#include <cstring>
 #include "Board.h"
 #include "Solver.h"
 #include "Exporter.h"
+
+constexpr const char* VERSION = "2.0.0";
+
+void printVersion() {
+    std::cout << "Knight's Tour Solver v" << VERSION << "\n";
+}
+
+void printHelp() {
+    std::cout << "Knight's Tour Solver v" << VERSION << "\n\n";
+    std::cout << "Usage: knights_tour [OPTIONS]\n\n";
+    std::cout << "Options:\n";
+    std::cout << "  -h, --help     Show this help message\n";
+    std::cout << "  -v, --version  Show version number\n\n";
+    std::cout << "Running without options starts the interactive menu.\n";
+}
 
 void clearInput() {
     std::cin.clear();
@@ -303,7 +319,19 @@ void testAllPositions() {
     std::cout << "  Avg backtracks: " << (totalBacktracks / successCount) << "\n";
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    // Handle command-line arguments
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
+            printHelp();
+            return 0;
+        }
+        if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--version") == 0) {
+            printVersion();
+            return 0;
+        }
+    }
+
     std::cout << "\033[2J\033[H"; // Clear screen
 
     try {
