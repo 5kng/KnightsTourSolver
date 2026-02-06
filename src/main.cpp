@@ -4,11 +4,23 @@
 #include <thread>
 #include <limits>
 #include <cstring>
+#include <cstdlib>
 #include "Board.h"
 #include "Solver.h"
 #include "Exporter.h"
 
-constexpr const char* VERSION = "2.0.0";
+constexpr const char* VERSION = "2.1.0";
+
+struct CLIOptions {
+    bool showHelp = false;
+    bool showVersion = false;
+    bool quickSolve = false;
+    bool closedTour = false;
+    int size = 8;
+    int startRow = 0;
+    int startCol = 0;
+    std::string exportFormat = "";
+};
 
 void printVersion() {
     std::cout << "Knight's Tour Solver v" << VERSION << "\n";
@@ -18,9 +30,20 @@ void printHelp() {
     std::cout << "Knight's Tour Solver v" << VERSION << "\n\n";
     std::cout << "Usage: knights_tour [OPTIONS]\n\n";
     std::cout << "Options:\n";
-    std::cout << "  -h, --help     Show this help message\n";
-    std::cout << "  -v, --version  Show version number\n\n";
-    std::cout << "Running without options starts the interactive menu.\n";
+    std::cout << "  -h, --help          Show this help message\n";
+    std::cout << "  -v, --version       Show version number\n";
+    std::cout << "  -q, --quick         Quick solve and exit\n";
+    std::cout << "  -s, --size N        Board size (default: 8)\n";
+    std::cout << "  -p, --start R,C     Starting position (default: 0,0)\n";
+    std::cout << "  -c, --closed        Find closed tour\n";
+    std::cout << "  -e, --export FMT    Export result (json|svg|txt)\n\n";
+    std::cout << "Examples:\n";
+    std::cout << "  knights_tour                     Start interactive menu\n";
+    std::cout << "  knights_tour -q                  Quick 8x8 solve\n";
+    std::cout << "  knights_tour -q -s 6             Solve 6x6 board\n";
+    std::cout << "  knights_tour -q -s 8 -p 3,4      Solve from position (3,4)\n";
+    std::cout << "  knights_tour -q -c               Find closed tour\n";
+    std::cout << "  knights_tour -q -e svg           Solve and export to SVG\n";
 }
 
 void clearInput() {
@@ -30,7 +53,7 @@ void clearInput() {
 
 void printMenu() {
     std::cout << "\n╔════════════════════════════════════════╗\n";
-    std::cout << "║     KNIGHT'S TOUR SOLVER v2.0          ║\n";
+    std::cout << "║     KNIGHT'S TOUR SOLVER v2.1          ║\n";
     std::cout << "║     Christmas Day Edition              ║\n";
     std::cout << "╚════════════════════════════════════════╝\n\n";
     std::cout << "1. Solve custom board\n";
@@ -268,6 +291,54 @@ void exportSolution() {
     clearInput();
 }
 
+int runCLI(const CLIOptions& opts) {
+    Board board(opts.size, opts.size);
+    Solver solver(board);
+    TourType tourType = opts.closedTour ? TourType::CLOSED : TourType::OPEN;
+
+    std::cout << "Solving " << opts.size << "x" << opts.size << " board from ("
+              << opts.startRow << "," << opts.startCol << ")";
+    if (opts.closedTour) std::cout << " [closed tour]";
+    std::cout << "...\n";
+
+    auto start = std::chrono::high_resolution_clock::now();
+    bool solved = solver.solve(opts.startRow, opts.startCol, tourType);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    if (solved) {
+        std::cout << "Solution found in " << duration.count() << " us\n\n";
+        board.print();
+
+        if (!opts.exportFormat.empty()) {
+            std::string filename = "knight_tour_solution." + opts.exportFormat;
+            bool success = false;
+
+            if (opts.exportFormat == "json") {
+                success = Exporter::exportToJSON(solver, board, filename);
+            } else if (opts.exportFormat == "svg") {
+                success = Exporter::exportToSVG(solver, board, filename);
+            } else if (opts.exportFormat == "txt") {
+                success = Exporter::exportToText(solver, board, filename);
+            } else {
+                std::cerr << "Unknown export format: " << opts.exportFormat << "\n";
+                return 1;
+            }
+
+            if (success) {
+                std::cout << "\nExported to " << filename << "\n";
+            } else {
+                std::cerr << "Export failed\n";
+                return 1;
+            }
+        }
+        return 0;
+    } else {
+        std::cout << "No solution found\n";
+        return 1;
+    }
+}
+
 void testAllPositions() {
     std::cout << "\n=== Testing All Starting Positions (8×8) ===\n\n";
     std::cout << "Testing all 64 possible starting positions...\n";
@@ -320,16 +391,67 @@ void testAllPositions() {
 }
 
 int main(int argc, char* argv[]) {
-    // Handle command-line arguments
+    CLIOptions opts;
+
+    // Parse command-line arguments
     for (int i = 1; i < argc; ++i) {
-        if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
+        std::string arg = argv[i];
+
+        if (arg == "-h" || arg == "--help") {
             printHelp();
             return 0;
         }
-        if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--version") == 0) {
+        if (arg == "-v" || arg == "--version") {
             printVersion();
             return 0;
         }
+        if (arg == "-q" || arg == "--quick") {
+            opts.quickSolve = true;
+            continue;
+        }
+        if (arg == "-c" || arg == "--closed") {
+            opts.closedTour = true;
+            continue;
+        }
+        if ((arg == "-s" || arg == "--size") && i + 1 < argc) {
+            opts.size = std::atoi(argv[++i]);
+            if (opts.size < 5 || opts.size > 100) {
+                std::cerr << "Error: Size must be between 5 and 100\n";
+                return 1;
+            }
+            continue;
+        }
+        if ((arg == "-p" || arg == "--start") && i + 1 < argc) {
+            std::string pos = argv[++i];
+            size_t comma = pos.find(',');
+            if (comma == std::string::npos) {
+                std::cerr << "Error: Start position must be R,C (e.g., 3,4)\n";
+                return 1;
+            }
+            opts.startRow = std::atoi(pos.substr(0, comma).c_str());
+            opts.startCol = std::atoi(pos.substr(comma + 1).c_str());
+            continue;
+        }
+        if ((arg == "-e" || arg == "--export") && i + 1 < argc) {
+            opts.exportFormat = argv[++i];
+            continue;
+        }
+
+        std::cerr << "Unknown option: " << arg << "\n";
+        std::cerr << "Use --help for usage information\n";
+        return 1;
+    }
+
+    // Validate start position
+    if (opts.startRow < 0 || opts.startRow >= opts.size ||
+        opts.startCol < 0 || opts.startCol >= opts.size) {
+        std::cerr << "Error: Start position out of bounds for " << opts.size << "x" << opts.size << " board\n";
+        return 1;
+    }
+
+    // Run in CLI mode if --quick was specified
+    if (opts.quickSolve) {
+        return runCLI(opts);
     }
 
     std::cout << "\033[2J\033[H"; // Clear screen
