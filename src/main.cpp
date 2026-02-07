@@ -53,8 +53,7 @@ void clearInput() {
 
 void printMenu() {
     std::cout << "\n╔════════════════════════════════════════╗\n";
-    std::cout << "║     KNIGHT'S TOUR SOLVER v2.1          ║\n";
-    std::cout << "║     Christmas Day Edition              ║\n";
+    std::cout << "║     KNIGHT'S TOUR SOLVER v2.1.0        ║\n";
     std::cout << "╚════════════════════════════════════════╝\n\n";
     std::cout << "1. Solve custom board\n";
     std::cout << "2. Visualize solution (animated)\n";
@@ -488,8 +487,7 @@ int main(int argc, char* argv[]) {
                     quickSolve();
                     break;
                 case 0:
-                    std::cout << "\nThank you for using Knight's Tour Solver!\n";
-                    std::cout << "Merry Christmas! 🎄\n\n";
+                    std::cout << "\nThank you for using Knight's Tour Solver!\n\n";
                     break;
                 default:
                     std::cout << "Invalid choice. Please try again.\n";
